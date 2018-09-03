@@ -12,9 +12,19 @@ import java.util.Properties;
 
 public class UserServices {
 
+    IOUtils ioUtils;
+
     private static final String filePath = "C:\\TMP\\Messanger\\";
 
-    public static User getUser(String email, String password) throws IOException {
+    public UserServices() {
+        this.ioUtils = new IOUtils();
+    }
+
+    public UserServices(IOUtils ioUtils) {
+        this.ioUtils = ioUtils;
+    }
+
+    public User getUser(String email, String password) throws IOException {
         User user = null;
         //read file
         Properties config = new Properties();
@@ -37,11 +47,11 @@ public class UserServices {
         return user;
     }
 
-    private static void printToSystemOutput(Properties config) throws IOException {
+    private void printToSystemOutput(Properties config) throws IOException {
         config.store(System.out, "Loaded properties:");
     }
 
-    public static boolean saveData(User user) {
+    public boolean saveData(User user) {
         boolean returnValue = true;
         if (user == null) {
             return false;
@@ -97,18 +107,99 @@ public class UserServices {
         return returnValue;
     }
 
-    public static boolean isUserExists(String email) {
+    public boolean isUserExists(String email) {
         Path userFile = Paths.get(filePath + email);
-        return Files.exists(userFile);
+        return ioUtils.fileExists(userFile);
     }
 
-    public static User newUser(String email, String password, String name, int age) {
+    public User newUser(String email, String password, String name, int age) {
         User user = new User(email, name, age, password);
         if (saveData(user)) {
             return user;
         } else {
 
             return null;
+        }
+    }
+
+    public User addUser() {
+        System.out.println("Please, enter your personal data:");
+        boolean proceed = false;
+        User user = null;
+        String email = null;
+        while (true) {
+            email = ioUtils.getValidEmail("Enter your email:");
+            if (email == null) {
+                break;
+            }
+            boolean exists = isUserExists(email);
+            if (exists) {
+                ioUtils.writeMessage(email + " is already registered in a system.");
+            } else {
+                proceed = true;
+                break;
+            }
+        }
+
+        if (proceed) {
+            String password = ioUtils.getNotEmptyString("Enter password:");
+            String name = ioUtils.getNotEmptyString("Enter your name:");
+            int age = ioUtils.getPositiveInteger("Enter your age:");
+
+            user = newUser(email, password, name, age);
+        }
+
+        return user;
+    }
+
+    public User login() throws IOException {
+        String email = ioUtils.getValidEmail("Enter your email:");
+
+        if (email == null) {
+            return null;
+        }
+        String password = ioUtils.getNotEmptyString("Enter password:");
+
+        User user = getUser(email, password);
+
+        return user;
+    }
+
+    public void sendMessageToUser(User currentUser) {
+        String recepient = getValidUserEmail(currentUser.getEmail(), "Enter recepients email:");
+
+        if (recepient == null) {
+            ioUtils.writeMessage("Unable to get Recepients name");
+            return;
+        }
+
+        String message = ioUtils.getNotEmptyString("Enter your message:");
+
+        boolean result = ioUtils.sendMessage(currentUser.getEmail(), recepient, message);
+        if (result) {
+            ioUtils.writeMessage("Message was sent to " + recepient);
+        } else {
+            ioUtils.writeMessage("Message was NOT sent to " + recepient);
+        }
+    }
+
+    private String getValidUserEmail(String currentUserEmail, String message) {
+
+        while (true) {
+            String email = ioUtils.getValidEmail(message);
+            if (email == null) {
+                return null;
+            }
+
+            if (currentUserEmail.equals(email)) {
+                continue;
+            }
+            if (!isUserExists(email)) {
+                ioUtils.writeMessage("No such user:" + email);
+                continue;
+            } else {
+                return email;
+            }
         }
     }
 }

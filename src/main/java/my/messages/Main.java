@@ -11,6 +11,10 @@ public class Main {
 
         User currentUser = null;
 
+        UserServices userServices = new UserServices();
+
+        IOUtils ioUtils = new IOUtils();
+
         boolean proceed = true;
         String choice = "";
 
@@ -23,7 +27,7 @@ public class Main {
                     break;
                 case "2":
                     if (currentUser == null) {
-                        currentUser = newUser();
+                        currentUser = userServices.addUser();
 
                     } else {
                         System.out.println(currentUser.getName() + ", please logout first.");
@@ -31,7 +35,7 @@ public class Main {
                     break;
                 case "3":
                     if (currentUser == null) {
-                        currentUser = getUser();
+                        currentUser = userServices.login();
 
                     } else {
                         System.out.println(currentUser.getName() + ", please logout first.");
@@ -44,67 +48,40 @@ public class Main {
                     break;
                 case "6":
                     break;
+                case "7":
+                    if (currentUser == null) {
+                        ioUtils.writeMessage("Please, login first.");
+                    } else {
+                        userServices.sendMessageToUser(currentUser);
+                    }
+                    break;
             }
         }
 
     }
 
-    private static User newUser() {
-        System.out.println("Please, enter your personal data:");
-        boolean proceed = false;
-        User user = null;
-        String email = null;
-        while (true) {
-            System.out.println("Enter your email:");
 
-            email = scanner.nextLine();
-            if (email == null || email.isEmpty()) {
-                break;
-            }
-            if (!email.contains("@")) {
-                continue;
-            }
-            boolean exists = UserServices.isUserExists(email);
-            if (exists) {
-                System.out.println(email + " is already registered in a system.");
-            } else {
-                proceed = true;
-                break;
-            }
-        }
-
-        if (proceed) {
-            String password = getNotEmptyString("Enter password:");
-            String name = getNotEmptyString("Enter your name:");
-            int age = getPositiveInteger("Enter your age:");
-
-            user = UserServices.newUser(email, password, name, age);
-        }
-
-        return user;
-    }
-
-    private static int getPositiveInteger(String request) {
-        int integer = 0;
-        while (integer < 1 || integer > 100) {
-            System.out.print(request);
-            try {
-                integer = Integer.parseInt(scanner.nextLine());
-            } catch (Exception e) {
-                integer = 0;
-            }
-        }
-        return integer;
-    }
-
-    private static String getNotEmptyString(String request) {
-        String input = "";
-        while (input.isEmpty()) {
-            System.out.print(request);
-            input = scanner.nextLine();
-        }
-        return input;
-    }
+//    private static int getPositiveInteger(String request) {
+//        int integer = 0;
+//        while (integer < 1 || integer > 100) {
+//            System.out.print(request);
+//            try {
+//                integer = Integer.parseInt(scanner.nextLine());
+//            } catch (Exception e) {
+//                integer = 0;
+//            }
+//        }
+//        return integer;
+//    }
+//
+//    private static String getNotEmptyString(String request) {
+//        String input = "";
+//        while (input.isEmpty()) {
+//            System.out.print(request);
+//            input = scanner.nextLine();
+//        }
+//        return input;
+//    }
 
     private static void printMenu(User currentUser) {
         String whoAmI = currentUser == null ? "Unknown user" : currentUser.getName();
@@ -114,18 +91,19 @@ public class Main {
         System.out.println("4 - Save data");
         System.out.println("5 - Logout");
         System.out.println("6 - Remove User");
+        System.out.println("7 - Send Message");
         System.out.println("Please, enter your choice, mr." + whoAmI);
     }
 
-    private static User getUser() throws IOException {
-
-        System.out.print("Please enter email:");
-        String email = scanner.nextLine();
-
-        System.out.print("Please enter password:");
-        String password = scanner.nextLine();
-
-        return UserServices.getUser(email, password);
-
-    }
+//    private static User getUser() throws IOException {
+//
+//        System.out.print("Please enter email:");
+//        String email = scanner.nextLine();
+//
+//        System.out.print("Please enter password:");
+//        String password = scanner.nextLine();
+//
+//        return UserServices.getUser(email, password);
+//
+//    }
 }
