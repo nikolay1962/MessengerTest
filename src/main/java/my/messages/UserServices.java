@@ -175,6 +175,11 @@ public class UserServices {
 
         String message = ioUtils.getNotEmptyString("Enter your message:");
 
+        if (message == null) {
+            ioUtils.writeMessage("Message was NOT sent to " + recepient);
+            return;
+        }
+
         boolean result = ioUtils.sendMessage(currentUser.getEmail(), recepient, message);
         if (result) {
             ioUtils.writeMessage("Message was sent to " + recepient);

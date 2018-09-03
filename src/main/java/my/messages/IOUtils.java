@@ -77,7 +77,7 @@ public class IOUtils {
     }
 
     public boolean sendMessage(String currentUserEmail, String recepient, String message) {
-        String filename = currentUserEmail + "-to-" + recepient;
+        String filename = currentUserEmail + "-to-" + recepient + ".txt";
         if (!fileExists(filename) && !createFile(filename)) {
             return false;
         }
