@@ -1,27 +1,26 @@
 package my.messages;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class IOUtils {
 
     Scanner scanner;
 
-    private static final String filePath = "C:\\TMP\\Messanger\\";
-
     public IOUtils() {
         this.scanner = new Scanner(System.in);
     }
 
     public boolean fileExists(String filename) {
-        Path path = Paths.get(filePath + filename);
+        Path path = Paths.get(filename);
         return fileExists(path);
     }
 
@@ -77,16 +76,16 @@ public class IOUtils {
     }
 
     public boolean sendMessage(String currentUserEmail, String recepient, String message) {
-        String filename = currentUserEmail + "-to-" + recepient + ".txt";
+        String filename = UserServices.PREFIX_SUFFIX[0] + recepient + UserServices.PREFIX_SUFFIX[1];
         if (!fileExists(filename) && !createFile(filename)) {
             return false;
         }
 
-        try(FileWriter fw = new FileWriter(filePath + filename, true);
+        try(FileWriter fw = new FileWriter(filename, true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw))
         {
-            out.println(LocalDateTime.now().toString());
+            out.print(LocalDateTime.now().toString() + "; from " + currentUserEmail + "; ");
             out.println(message);
 
         } catch (IOException e) {
@@ -94,7 +93,6 @@ public class IOUtils {
         }
 
         return true;
-
     }
 
     private boolean createFile(String filename) {
@@ -105,5 +103,96 @@ public class IOUtils {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public Properties getProperties(String email) {
+        Properties config = new Properties();
+        Path userData = Paths.get(email);
+        try (InputStream stream = Files.newInputStream(userData)) {
+            config.load(stream);
+        } catch (IOException e) {
+            return null;
+        }
+
+        return config;
+    }
+
+    public boolean saveUserData(User user) {
+
+        Path userFile = Paths.get(user.getEmail());
+        Properties prop = new Properties();
+        OutputStream output = null;
+
+        try {
+
+            output = new FileOutputStream(user.getEmail());
+            LocalDateTime currentMoment = LocalDateTime.now();
+
+            // set the properties value
+            prop.setProperty("email", user.getEmail());
+            prop.setProperty("name", user.getName());
+            prop.setProperty("password", user.getPassword());
+            prop.setProperty("age", String.valueOf(user.getAge()));
+            prop.setProperty("lastLogoutTime", currentMoment.format(UserServices.FORMATTER));
+            prop.setProperty("lastTimeOfMessageGet", Long.toString(user.getLastTimeOfMessageGet()));
+
+            // save properties to project root folder
+            prop.store(output, null);
+
+        } catch (IOException io) {
+            io.printStackTrace();
+            return false;
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkIfHaveNewMessages(String incomingMessages, long lastMessageMillis) {
+        File file = new File(incomingMessages);
+
+        return file.lastModified() > lastMessageMillis;
+    }
+
+    public void displayToUser(User user, long lastMessageGet) {
+
+        //read all lines from message file
+        Path messages = Paths.get(user.getIncomingMessages());
+        // variable to compare times;
+
+        String timeOfLastPrintedMessage = Instant.ofEpochMilli(lastMessageGet).atZone(ZoneId.systemDefault()).toLocalDateTime().toString();
+
+        try {
+            List<String> lines = Files.readAllLines(messages);
+
+
+            for (String line : lines) {
+                if (line.indexOf(';') > 0) {
+                    String timeOfMessage = line.substring(0, line.indexOf(';'));
+                    if (timeOfLastPrintedMessage.compareTo(timeOfMessage) < 0) {
+                        //display to user.
+                        writeMessage(line);
+                        timeOfLastPrintedMessage = timeOfMessage;
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        //change lastTimeOfMessageGet in user data
+        user.setLastTimeOfMessageGet(LocalDateTime.parse(timeOfLastPrintedMessage).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
+    }
+
+    public String getInputFromUser() {
+        return scanner.nextLine();
     }
 }

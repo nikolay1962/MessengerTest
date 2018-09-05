@@ -1,20 +1,19 @@
 package my.messages;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 public class UserServices {
 
     IOUtils ioUtils;
 
-    private static final String filePath = "C:\\TMP\\Messanger\\";
+    final static String[] PREFIX_SUFFIX = {"to_", ".txt"};
+
+    public static  final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public UserServices() {
         this.ioUtils = new IOUtils();
@@ -24,91 +23,36 @@ public class UserServices {
         this.ioUtils = ioUtils;
     }
 
-    public User getUser(String email, String password) throws IOException {
+    public void getUser(String email, String password) throws IOException {
         User user = null;
         //read file
-        Properties config = new Properties();
-        Path userData = Paths.get(filePath + email);
-        try (InputStream stream = Files.newInputStream(userData)) {
-
-            config.load(stream);
-        }
-
-        printToSystemOutput(config);
+        Properties config = ioUtils.getProperties(email);
 
         //get fields from file
-        if (password.equals(config.getProperty("password"))) {
+        if (config != null && password.equals(config.getProperty("password"))) {
             user = new User(config.getProperty("email"),
                     config.getProperty("name"),
                     Integer.parseInt(config.getProperty("age")),
                     config.getProperty("password"));
+            user.setLastLogoutTime(LocalDateTime.parse(config.getProperty("lastLogoutTime"), FORMATTER));
+            user.setLastTimeOfMessageGet(Long.parseLong(config.getProperty("lastTimeOfMessageGet")));
         }
         //create new user
-        return user;
-    }
-
-    private void printToSystemOutput(Properties config) throws IOException {
-        config.store(System.out, "Loaded properties:");
+        if (user != null) {
+            runUser(user);
+        }
     }
 
     public boolean saveData(User user) {
-        boolean returnValue = true;
         if (user == null) {
             return false;
         }
 
-        Path userFile = Paths.get(filePath + user.getEmail());
-        Properties prop = new Properties();
-        OutputStream output = null;
-
-        try {
-
-            output = new FileOutputStream(filePath + user.getEmail());
-            LocalDateTime currentMoment = LocalDateTime.now();
-
-            // set the properties value
-            prop.setProperty("email", user.getEmail());
-            prop.setProperty("name", user.getName());
-            prop.setProperty("password", user.getPassword());
-            prop.setProperty("age", String.valueOf(user.getAge()));
-            prop.setProperty("lastLoginTime", currentMoment.toString());
-
-            // save properties to project root folder
-            prop.store(output, null);
-
-        } catch (IOException io) {
-            io.printStackTrace();
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-//        try (BufferedWriter writer = Files.newBufferedWriter(userFile)) {
-//            StringBuilder sb = new StringBuilder("");
-//            sb.append("email=").append(user.getEmail()).append('\n');
-//            sb.append("name=").append(user.getName()).append('\n');
-//            sb.append("age=").append(user.getAge()).append('\n');
-//            sb.append("password=").append(user.getPassword()).append('\n');
-//            sb.append("lastLoginTime=").append(user.getLastLoginTime());
-//            sb.append('\n');
-//            writer.write(sb.toString());
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            returnValue = false;
-//        }
-
-        return returnValue;
+        return ioUtils.saveUserData(user);
     }
 
     public boolean isUserExists(String email) {
-        Path userFile = Paths.get(filePath + email);
+        Path userFile = Paths.get(email);
         return ioUtils.fileExists(userFile);
     }
 
@@ -122,7 +66,7 @@ public class UserServices {
         }
     }
 
-    public User addUser() {
+    public void addUser() {
         System.out.println("Please, enter your personal data:");
         boolean proceed = false;
         User user = null;
@@ -149,7 +93,9 @@ public class UserServices {
             user = newUser(email, password, name, age);
         }
 
-        return user;
+        if (user != null) {
+            runUser(user);
+        }
     }
 
     public User login() throws IOException {
@@ -161,12 +107,40 @@ public class UserServices {
         String password = ioUtils.getNotEmptyString("Enter password:");
 
         User user = getUser(email, password);
+        if (user != null) {
+            ioUtils.writeMessage("Hello mr." + user.getName());
+            ioUtils.writeMessage("You have not been here since " + user.getlastLogoutTime().format(FORMATTER));
+        }
+
+        startGettingMessages(user);
 
         return user;
     }
 
+    public void logout(User user) {
+        user.getMessageChecker().terminate();
+        try {
+            user.getThreadMessageChecker().join();
+        } catch (InterruptedException e) {
+            ioUtils.writeMessage("Message Checker tread finished with Exception");
+        }
+        ioUtils.saveUserData(user);
+    }
+
+    void startGettingMessages(User user) {
+        MessageChecker messageChecker = new MessageChecker();
+        messageChecker.setIoUtils(ioUtils);
+        messageChecker.setUser(user);
+        user.setMessageChecker(messageChecker);
+
+        Thread thread = new Thread(messageChecker);
+        thread.start();
+        user.setThreadMessageChecker(thread);
+    }
+
     public void sendMessageToUser(User currentUser) {
-        String recepient = getValidUserEmail(currentUser.getEmail(), "Enter recepients email:");
+        String recepient = getValidUserEmail("Enter recepients email:");
+//        String recepient = getValidUserEmail(currentUser.getEmail(), "Enter recepients email:");
 
         if (recepient == null) {
             ioUtils.writeMessage("Unable to get Recepients name");
@@ -206,5 +180,61 @@ public class UserServices {
                 return email;
             }
         }
+    }
+
+    private String getValidUserEmail(String message) {
+
+        return getValidUserEmail("allowed to yourself", message);
+    }
+
+    private void runUser(User user) {
+
+        boolean proceed = true;
+        String choice = "";
+
+        while (proceed) {
+            printMenu(user);
+            choice = ioUtils.getInputFromUser();
+            switch (choice) {
+                case "1":
+                    proceed = false;
+                    if (user != null) {
+                        logout(user);
+                    }
+                    user = null;
+                    break;
+                case "2":
+                    if (user == null) {
+                        ioUtils.writeMessage("Please, login first.");
+                    } else {
+                        sendMessageToUser(user);
+                    }
+                    break;
+                case "3":
+                    if (user == null) {
+                        ioUtils.writeMessage("Please, login first.");
+                    } else {
+                        ioUtils.saveUserData(user);
+                    }
+                    break;
+                case "4":
+                    break;
+                case "5":
+                    break;
+                case "6":
+                    break;
+            }
+        }
+    }
+
+    private static void printMenu(User currentUser) {
+        String whoAmI = currentUser == null ? "Unknown user" : currentUser.getName();
+        System.out.println("1 - Logout");
+        System.out.println("2 - Send Message");
+        System.out.println("3 - Save data");
+        System.out.println("4 - Join Chat");
+        System.out.println("5 - Start Chat");
+        System.out.println("6 - Remove User");
+        System.out.println("Please, enter your choice, mr." + whoAmI);
     }
 }
