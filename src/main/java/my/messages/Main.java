@@ -35,7 +35,7 @@ public class Main {
                     break;
                 case "3":
                     if (currentUser == null) {
-                        currentUser = userServices.login();
+                        userServices.login();
 
                     } else {
                         System.out.println(currentUser.getName() + ", please logout first.");

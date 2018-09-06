@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Messagingtest:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Messagingtest_jar</output-path>
+    <root id="archive" name="Messagingtest.jar">
+      <element id="module-output" name="Messagingtest" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

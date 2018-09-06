@@ -4,29 +4,29 @@ public class MessageChecker implements Runnable {
 
     private volatile boolean proceed = true;
 
-    private User user;
+    private Chat chat;
     private IOUtils ioUtils;
 
     @Override
     public void run() {
+        String fileMessages = chat.getMessageFile();
         while (proceed) {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 proceed = false;
             }
-            long lastMessageGet = user.getLastTimeOfMessageGet();
-            boolean haveNewMessages = ioUtils.checkIfHaveNewMessages(user.getIncomingMessages(), lastMessageGet);
+            long lastMessageGet = chat.getLastTimeOfMessageGet();
+            boolean haveNewMessages = ioUtils.checkIfHaveNewMessages(fileMessages, lastMessageGet);
 
             if (haveNewMessages) {
-                System.out.println("Have new Messages!!!!!!!!");
-                ioUtils.displayToUser(user, lastMessageGet);
+                ioUtils.displayToUser(this.chat);
             }
         }
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
 
     public void setIoUtils(IOUtils ioUtils) {

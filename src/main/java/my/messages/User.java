@@ -1,10 +1,12 @@
 package my.messages;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
-
+    private UserServices userServices;
 
     private String email;
     private String name;
@@ -13,15 +15,21 @@ public class User {
     private LocalDateTime lastLogoutTime;
     private volatile long lastTimeOfMessageGet;
     private String incomingMessages;
-    private MessageChecker messageChecker;
-    private Thread threadMessageChecker;
+//    private MessageChecker messageChecker;
+//    private Thread threadMessageChecker;
+    private List<Chat> chats;
 
-    public User(String email, String name, int age, String password) {
+    public User(String email, String name, int age, String password, long lastTimeOfMessageGet) {
+        this.userServices = new UserServices();
         this.email = email;
         this.name = name;
         this.age = age;
         this.password = password;
-        incomingMessages = UserServices.PREFIX_SUFFIX[0] + email + UserServices.PREFIX_SUFFIX[1];
+        this.lastTimeOfMessageGet = lastTimeOfMessageGet;
+        this.incomingMessages = userServices.messageFileName(email);
+        this.chats = new ArrayList<>();
+        Chat userMessages = new Chat("Personal for " + name, incomingMessages, lastTimeOfMessageGet);
+        chats.add(userMessages);
     }
 
     public String getEmail() {
@@ -44,36 +52,40 @@ public class User {
         return lastLogoutTime;
     }
 
-    public String getIncomingMessages() {
-        return incomingMessages;
-    }
-
     public void setLastLogoutTime(LocalDateTime lastLogoutTime) {
         this.lastLogoutTime = lastLogoutTime;
     }
 
-    public void setMessageChecker(MessageChecker messageChecker) {
-        this.messageChecker = messageChecker;
-    }
-
-    public MessageChecker getMessageChecker() {
-        return messageChecker;
-    }
-
-    public void setThreadMessageChecker(Thread threadMessageChecker) {
-        this.threadMessageChecker = threadMessageChecker;
-    }
-
-    public Thread getThreadMessageChecker() {
-        return threadMessageChecker;
-    }
-
+//    public String getIncomingMessages() {
+//        return incomingMessages;
+//    }
+//
+//    public void setMessageChecker(MessageChecker messageChecker) {
+//        this.messageChecker = messageChecker;
+//    }
+//
+//    public MessageChecker getMessageChecker() {
+//        return messageChecker;
+//    }
+//
+//    public void setThreadMessageChecker(Thread threadMessageChecker) {
+//        this.threadMessageChecker = threadMessageChecker;
+//    }
+//
+//    public Thread getThreadMessageChecker() {
+//        return threadMessageChecker;
+//    }
+//
     public long getLastTimeOfMessageGet() {
         return lastTimeOfMessageGet;
     }
 
     public void setLastTimeOfMessageGet(long lastTimeOfMessageGet) {
         this.lastTimeOfMessageGet = lastTimeOfMessageGet;
+    }
+
+    public List<Chat> getChats() {
+        return chats;
     }
 
     @Override

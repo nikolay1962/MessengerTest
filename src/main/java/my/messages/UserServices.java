@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Properties;
 
 public class UserServices {
@@ -12,6 +13,7 @@ public class UserServices {
     IOUtils ioUtils;
 
     final static String[] PREFIX_SUFFIX = {"to_", ".txt"};
+    final static String[] CHAT_PREFIX_SUFFIX = {"CHAT_", ".txt"};
 
     public static  final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -23,7 +25,7 @@ public class UserServices {
         this.ioUtils = ioUtils;
     }
 
-    public void getUser(String email, String password) throws IOException {
+    public User getUser(String email, String password) throws IOException {
         User user = null;
         //read file
         Properties config = ioUtils.getProperties(email);
@@ -33,14 +35,13 @@ public class UserServices {
             user = new User(config.getProperty("email"),
                     config.getProperty("name"),
                     Integer.parseInt(config.getProperty("age")),
-                    config.getProperty("password"));
+                    config.getProperty("password"),
+                    Long.parseLong(config.getProperty("lastTimeOfMessageGet")));
             user.setLastLogoutTime(LocalDateTime.parse(config.getProperty("lastLogoutTime"), FORMATTER));
-            user.setLastTimeOfMessageGet(Long.parseLong(config.getProperty("lastTimeOfMessageGet")));
         }
         //create new user
-        if (user != null) {
-            runUser(user);
-        }
+
+        return user;
     }
 
     public boolean saveData(User user) {
@@ -57,7 +58,7 @@ public class UserServices {
     }
 
     public User newUser(String email, String password, String name, int age) {
-        User user = new User(email, name, age, password);
+        User user = new User(email, name, age, password, 0L);
         if (saveData(user)) {
             return user;
         } else {
@@ -98,11 +99,11 @@ public class UserServices {
         }
     }
 
-    public User login() throws IOException {
+    public void login() throws IOException {
         String email = ioUtils.getValidEmail("Enter your email:");
 
-        if (email == null) {
-            return null;
+        if (email == null || email.isEmpty()) {
+            return;
         }
         String password = ioUtils.getNotEmptyString("Enter password:");
 
@@ -112,17 +113,16 @@ public class UserServices {
             ioUtils.writeMessage("You have not been here since " + user.getlastLogoutTime().format(FORMATTER));
         }
 
-        startGettingMessages(user);
+        if (user != null) {
+            runUser(user);
+        }
 
-        return user;
     }
 
     public void logout(User user) {
-        user.getMessageChecker().terminate();
-        try {
-            user.getThreadMessageChecker().join();
-        } catch (InterruptedException e) {
-            ioUtils.writeMessage("Message Checker tread finished with Exception");
+        for (int i = user.getChats().size() - 1; i >= 0 ; i--) {
+            Chat chat = user.getChats().get(i);
+            stopCheckingChat(user, i);
         }
         ioUtils.saveUserData(user);
     }
@@ -130,21 +130,38 @@ public class UserServices {
     void startGettingMessages(User user) {
         MessageChecker messageChecker = new MessageChecker();
         messageChecker.setIoUtils(ioUtils);
-        messageChecker.setUser(user);
-        user.setMessageChecker(messageChecker);
+        int chatsLastIndex = user.getChats().size() - 1;
+        Chat lastChat = user.getChats().get(chatsLastIndex);
+        messageChecker.setChat(lastChat);
+
+        lastChat.setMessageChecker(messageChecker);
 
         Thread thread = new Thread(messageChecker);
         thread.start();
-        user.setThreadMessageChecker(thread);
+        lastChat.setCheckingThread(thread);
     }
 
     public void sendMessageToUser(User currentUser) {
-        String recepient = getValidUserEmail("Enter recepients email:");
-//        String recepient = getValidUserEmail(currentUser.getEmail(), "Enter recepients email:");
+        int indexOfChat = 0;
+        String messageFile = "";
+        String recepient = "";
+        if (currentUser.getChats().size() > 1) {
+            indexOfChat = getChatForAction(currentUser.getChats(), "Enter index of Chat to send message");
+            if (indexOfChat > 0) {
+                messageFile = currentUser.getChats().get(indexOfChat).getMessageFile();
+                recepient = currentUser.getChats().get(indexOfChat).getName();
+            } else {
+                ioUtils.writeMessage("Message was NOT sent.");
+                return;
+            }
+        } else { //send personal message.
+            recepient = getValidUserEmail("Enter recepients email:");
+            messageFile = messageFileName(recepient);
 
-        if (recepient == null) {
-            ioUtils.writeMessage("Unable to get Recepients name");
-            return;
+            if (recepient == null) {
+                ioUtils.writeMessage("Unable to get Recepient\'s name");
+                return;
+            }
         }
 
         String message = ioUtils.getNotEmptyString("Enter your message:");
@@ -154,12 +171,27 @@ public class UserServices {
             return;
         }
 
-        boolean result = ioUtils.sendMessage(currentUser.getEmail(), recepient, message);
+        boolean result = ioUtils.sendMessage(currentUser.getEmail(), messageFile, message);
         if (result) {
             ioUtils.writeMessage("Message was sent to " + recepient);
         } else {
             ioUtils.writeMessage("Message was NOT sent to " + recepient);
         }
+    }
+
+    private int getChatForAction(List<Chat> chats, String request) {
+        int index = -1;
+        while (true) {
+            ioUtils.writeMessage("index: Chat Name");
+            for (int i = 1; i < chats.size(); i++) {
+                ioUtils.writeMessage(i + ": \t" + chats.get(i).getName());
+            }
+            index = ioUtils.getPositiveInteger(request);
+            if (index > 0 && index < chats.size()) {
+                break;
+            }
+        }
+        return index;
     }
 
     private String getValidUserEmail(String currentUserEmail, String message) {
@@ -191,6 +223,7 @@ public class UserServices {
 
         boolean proceed = true;
         String choice = "";
+        startGettingMessages(user);
 
         while (proceed) {
             printMenu(user);
@@ -218,13 +251,96 @@ public class UserServices {
                     }
                     break;
                 case "4":
+                    //join chat
+                    joinChat(user);
                     break;
                 case "5":
+                    //start chat
+                    startNewChat(user);
                     break;
                 case "6":
+                    //invite to chat
+                    inviteOtherUserToChat(user);
+                    break;
+                case "7":
+                    //quit chat
+                    quitChat(user);
                     break;
             }
         }
+    }
+
+    private void joinChat(User user) {
+        String chatFileName = ioUtils.getNotEmptyString("Enter Chat Code, received in Invitation:");
+        String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
+        Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
+        user.getChats().add(newChat);
+        startGettingMessages(user);
+    }
+
+    private void inviteOtherUserToChat(User user) {
+        if (user.getChats().size() < 2) {
+            ioUtils.writeMessage("No chats available.");
+            return;
+        }
+        int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to invite");
+        String chatMesssages = user.getChats().get(indexOfChat).getMessageFile();
+
+        String otherUser = getValidUserEmail(user.getEmail(), "Enter email of user to invite:");
+
+        if (otherUser == null) {
+            ioUtils.writeMessage("No one was invited");
+        }
+
+        String messageFile = messageFileName(otherUser);
+
+        boolean result = ioUtils.sendMessage(user.getEmail(), messageFile,
+                "Mr." + user.getName() + " is inviting you to join his chat. Please, join, using code below:");
+        result = ioUtils.sendMessage(user.getEmail(), messageFile, chatMesssages);
+        if (result) {
+            ioUtils.writeMessage("Invitation was sent to " + otherUser);
+        } else {
+            ioUtils.writeMessage("Unable to send invitation to " + otherUser);
+        }
+
+    }
+
+    private void quitChat(User user) {
+        if (user.getChats().size() > 1) {
+            int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to quit");
+            if (indexOfChat > 0) {
+                String messageFile = user.getChats().get(indexOfChat).getMessageFile();
+                stopCheckingChat(user, indexOfChat);
+            } else {
+                ioUtils.writeMessage("You stay in a chat.");
+                return;
+            }
+        }
+    }
+
+    private void stopCheckingChat(User user, int indexOfChat) {
+
+        Chat chat = user.getChats().get(indexOfChat);
+
+        chat.getMessageChecker().terminate();
+        try {
+            chat.getCheckingThread().join();
+        } catch (InterruptedException e) {
+            ioUtils.writeMessage("Message Checker tread finished with Exception");
+        }
+        if (indexOfChat == 0) {
+            user.setLastTimeOfMessageGet(chat.getLastTimeOfMessageGet());
+        }
+
+        user.getChats().remove(indexOfChat);
+    }
+
+    private void startNewChat(User user) {
+        String chatFileName = chatFileName(user.getEmail());
+        String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
+        Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
+        user.getChats().add(newChat);
+        startGettingMessages(user);
     }
 
     private static void printMenu(User currentUser) {
@@ -234,7 +350,16 @@ public class UserServices {
         System.out.println("3 - Save data");
         System.out.println("4 - Join Chat");
         System.out.println("5 - Start Chat");
-        System.out.println("6 - Remove User");
+        System.out.println("6 - Invite to Chat");
+        System.out.println("7 - Quit Chat");
         System.out.println("Please, enter your choice, mr." + whoAmI);
+    }
+
+    public String messageFileName(String recepient) {
+        return UserServices.PREFIX_SUFFIX[0] + recepient + UserServices.PREFIX_SUFFIX[1];
+    }
+
+    public String chatFileName(String recepient) {
+        return UserServices.CHAT_PREFIX_SUFFIX[0] + recepient + UserServices.CHAT_PREFIX_SUFFIX[1];
     }
 }

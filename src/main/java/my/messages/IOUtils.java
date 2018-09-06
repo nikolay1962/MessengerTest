@@ -75,8 +75,8 @@ public class IOUtils {
         }
     }
 
-    public boolean sendMessage(String currentUserEmail, String recepient, String message) {
-        String filename = UserServices.PREFIX_SUFFIX[0] + recepient + UserServices.PREFIX_SUFFIX[1];
+    public boolean sendMessage(String currentUserEmail, String filename, String message) {
+//        String filename = UserServices.PREFIX_SUFFIX[0] + recepient + UserServices.PREFIX_SUFFIX[1];
         if (!fileExists(filename) && !createFile(filename)) {
             return false;
         }
@@ -161,24 +161,29 @@ public class IOUtils {
         return file.lastModified() > lastMessageMillis;
     }
 
-    public void displayToUser(User user, long lastMessageGet) {
+    public void displayToUser(Chat chat) {
 
         //read all lines from message file
-        Path messages = Paths.get(user.getIncomingMessages());
+        Path messages = Paths.get(chat.getMessageFile());
         // variable to compare times;
 
-        String timeOfLastPrintedMessage = Instant.ofEpochMilli(lastMessageGet).atZone(ZoneId.systemDefault()).toLocalDateTime().toString();
+        String timeOfLastPrintedMessage = Instant.ofEpochMilli(chat.getLastTimeOfMessageGet()).atZone(ZoneId.systemDefault()).toLocalDateTime().toString();
 
         try {
             List<String> lines = Files.readAllLines(messages);
 
+            boolean printChatName = true;
 
             for (String line : lines) {
                 if (line.indexOf(';') > 0) {
                     String timeOfMessage = line.substring(0, line.indexOf(';'));
                     if (timeOfLastPrintedMessage.compareTo(timeOfMessage) < 0) {
                         //display to user.
-                        writeMessage(line);
+                        if (printChatName) {
+                            printChatName = false;
+                            writeMessage("<++++++++++ " + chat.getName() + " ++++++++++>");
+                        }
+                        writeMessage('\t' + line);
                         timeOfLastPrintedMessage = timeOfMessage;
                     }
                 }
@@ -188,11 +193,12 @@ public class IOUtils {
             System.out.println(e);
         }
         //change lastTimeOfMessageGet in user data
-        user.setLastTimeOfMessageGet(LocalDateTime.parse(timeOfLastPrintedMessage).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        chat.setLastTimeOfMessageGet(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 
     }
 
     public String getInputFromUser() {
         return scanner.nextLine();
     }
+
 }
