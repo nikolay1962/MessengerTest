@@ -39,11 +39,24 @@ public class IOUtils {
     public int getPositiveInteger(String request) {
         int integer = 0;
         while (integer < 1 || integer > 100) {
-            System.out.print(request);
+            writeMessage(request);
             try {
                 integer = Integer.parseInt(scanner.nextLine());
             } catch (Exception e) {
                 integer = 0;
+            }
+        }
+        return integer;
+    }
+
+    public int getIntegerWithinBounds(String request, int lower, int upper) {
+        int integer = lower - 1;
+        while (integer < lower || integer > upper) {
+            writeMessage(request);
+            try {
+                integer = Integer.parseInt(scanner.nextLine());
+            } catch (Exception e) {
+                integer = lower - 1;
             }
         }
         return integer;

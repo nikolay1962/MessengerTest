@@ -146,15 +146,13 @@ public class UserServices {
         String messageFile = "";
         String recepient = "";
         if (currentUser.getChats().size() > 1) {
-            indexOfChat = getChatForAction(currentUser.getChats(), "Enter index of Chat to send message");
+            indexOfChat = getChatForAction(currentUser.getChats(), "Enter index of Chat to send message", false);
             if (indexOfChat > 0) {
                 messageFile = currentUser.getChats().get(indexOfChat).getMessageFile();
                 recepient = currentUser.getChats().get(indexOfChat).getName();
-            } else {
-                ioUtils.writeMessage("Message was NOT sent.");
-                return;
             }
-        } else { //send personal message.
+        }
+        if (indexOfChat == 0){ //send personal message.
             recepient = getValidUserEmail("Enter recepients email:");
             messageFile = messageFileName(recepient);
 
@@ -179,15 +177,16 @@ public class UserServices {
         }
     }
 
-    private int getChatForAction(List<Chat> chats, String request) {
+    private int getChatForAction(List<Chat> chats, String request, boolean onlyChat) {
         int index = -1;
+        int lower = onlyChat ? 1 : 0;
         while (true) {
             ioUtils.writeMessage("index: Chat Name");
-            for (int i = 1; i < chats.size(); i++) {
+            for (int i = lower; i < chats.size(); i++) {
                 ioUtils.writeMessage(i + ": \t" + chats.get(i).getName());
             }
-            index = ioUtils.getPositiveInteger(request);
-            if (index > 0 && index < chats.size()) {
+            index = ioUtils.getIntegerWithinBounds(request, lower, chats.size() - 1);
+            if (index >= 0 && index < chats.size()) {
                 break;
             }
         }
@@ -283,7 +282,7 @@ public class UserServices {
             ioUtils.writeMessage("No chats available.");
             return;
         }
-        int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to invite");
+        int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to invite", true);
         String chatMesssages = user.getChats().get(indexOfChat).getMessageFile();
 
         String otherUser = getValidUserEmail(user.getEmail(), "Enter email of user to invite:");
@@ -296,9 +295,16 @@ public class UserServices {
 
         boolean result = ioUtils.sendMessage(user.getEmail(), messageFile,
                 "Mr." + user.getName() + " is inviting you to join his chat. Please, join, using code below:");
-        result = ioUtils.sendMessage(user.getEmail(), messageFile, chatMesssages);
         if (result) {
-            ioUtils.writeMessage("Invitation was sent to " + otherUser);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            result = ioUtils.sendMessage(user.getEmail(), messageFile, chatMesssages);
+        }
+        if (result) {
+            ioUtils.writeMessage("Invitation to chat:" + chatMesssages + " was sent to " + otherUser);
         } else {
             ioUtils.writeMessage("Unable to send invitation to " + otherUser);
         }
@@ -307,7 +313,7 @@ public class UserServices {
 
     private void quitChat(User user) {
         if (user.getChats().size() > 1) {
-            int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to quit");
+            int indexOfChat = getChatForAction(user.getChats(), "Enter index of CHAT to quit", true);
             if (indexOfChat > 0) {
                 String messageFile = user.getChats().get(indexOfChat).getMessageFile();
                 stopCheckingChat(user, indexOfChat);
