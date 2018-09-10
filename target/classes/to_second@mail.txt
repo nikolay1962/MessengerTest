@@ -1,0 +1,22 @@
+2018-09-06T20:37:35.487; from second@mail; hi second
+2018-09-06T20:39:06.454; from first@mail; hi mr second
+2018-09-06T20:40:57.152; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-06T20:40:57.152; from first@mail; CHAT_first@mail.txt
+2018-09-06T20:52:09.232; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-06T20:52:09.232; from first@mail; CHAT_first@mail.txt
+2018-09-06T20:57:33.712; from first@mail; i quit chat
+2018-09-06T23:02:46.923; from first@mail; hi, let's chat
+2018-09-06T23:04:03.691; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-06T23:04:03.706; from first@mail; CHAT_first@mail.txt
+2018-09-06T23:06:18.428; from first@mail; message to private chat
+2018-09-06T23:14:46.625; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-06T23:14:46.625; from first@mail; CHAT_first@mail.txt
+2018-09-06T23:23:32.169; from first@mail; hi, let's chat
+2018-09-06T23:24:17.581; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-06T23:24:17.690; from first@mail; CHAT_first@mail.txt
+2018-09-06T23:25:47.546; from first@mail; private message
+2018-09-06T23:26:52.973; from first@mail; i quit chat
+2018-09-07T18:52:01.502; from first@mail; ok
+2018-09-07T18:56:12.269; from first@mail; me too.
+2018-09-07T19:00:58.055; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-07T19:00:58.156; from first@mail; CHAT_first@mail.txt

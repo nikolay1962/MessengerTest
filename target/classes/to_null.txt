@@ -1,0 +1,4 @@
+2018-09-07T18:59:59.987; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-07T19:00:00.088; from first@mail; CHAT_first@mail.txt
+2018-09-07T19:00:31.161; from first@mail; Mr.first is inviting you to join his chat. Please, join, using code below:
+2018-09-07T19:00:31.262; from first@mail; CHAT_first@mail.txt

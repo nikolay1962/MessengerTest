@@ -1,0 +1,17 @@
+2018-09-06T20:53:32.333; from second@mail; hi from chat
+2018-09-06T20:54:01.037; from first@mail; we are in chat
+2018-09-06T20:54:32.144; from first@mail; is it good?
+2018-09-06T20:55:42.812; from second@mail; 20:55
+2018-09-06T23:05:09.180; from first@mail; are you in chat?
+2018-09-06T23:05:27.307; from second@mail; yes, i am there
+2018-09-06T23:17:55.581; from second@mail; i am in
+2018-09-06T23:18:10.120; from first@mail; me too.
+2018-09-06T23:25:13.351; from first@mail; i am in
+2018-09-06T23:25:24.396; from second@mail; me too
+2018-09-06T23:26:07.187; from second@mail; why not in chat?
+2018-09-06T23:26:22.724; from first@mail; just for fun/
+2018-09-07T19:02:43.862; from second@mail; hi guys
+2018-09-07T19:03:09.969; from first@mail; i am fine and you?
+2018-09-07T19:03:27.076; from third@mail; me too
+2018-09-07T19:03:59.371; from first@mail; what about party?
+2018-09-07T19:06:15.811; from second@mail; bye

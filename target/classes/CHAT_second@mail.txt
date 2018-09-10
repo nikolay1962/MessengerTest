@@ -1,0 +1,2 @@
+2018-09-07T18:54:25.372; from first@mail; Hi from chat
+2018-09-07T18:55:08.085; from second@mail; i see

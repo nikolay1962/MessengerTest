@@ -342,7 +342,13 @@ public class UserServices {
     }
 
     private void startNewChat(User user) {
-        String chatFileName = chatFileName(user.getEmail());
+        String chatFileName = null;
+        try {
+            chatFileName = chatFileName(user.getEmail());
+        } catch (NullStringException e) {
+            ioUtils.writeMessage("Unable to get current user email.");
+            return;
+        }
         String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
         Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
         user.getChats().add(newChat);
@@ -365,7 +371,10 @@ public class UserServices {
         return UserServices.PREFIX_SUFFIX[0] + recepient + UserServices.PREFIX_SUFFIX[1];
     }
 
-    public String chatFileName(String recepient) {
+    public String chatFileName(String recepient) throws NullStringException {
+        if (recepient == null) {
+            throw new NullStringException("null value was provided to chatFileName.");
+        }
         return UserServices.CHAT_PREFIX_SUFFIX[0] + recepient + UserServices.CHAT_PREFIX_SUFFIX[1];
     }
 }

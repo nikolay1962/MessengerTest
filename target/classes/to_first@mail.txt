@@ -1,0 +1,14 @@
+2018-09-06T20:39:57.170; from second@mail; hi to you, too
+2018-09-06T20:42:09.755; from second@mail; did not receive code of chat
+2018-09-06T20:51:28.141; from second@mail; hi mr. first
+2018-09-06T20:58:12.806; from second@mail; so did i
+2018-09-06T23:03:27.717; from second@mail; hi, let's do it
+2018-09-06T23:07:07.709; from second@mail; i quit, bye.
+2018-09-06T23:14:09.902; from second@mail; hi, let's chat
+2018-09-06T23:23:51.966; from second@mail; ok
+2018-09-06T23:27:17.621; from second@mail; me too.
+2018-09-07T18:51:38.980; from second@mail; hi, let's chat
+2018-09-07T18:53:06.887; from second@mail; Mr.second is inviting you to join his chat. Please, join, using code below:
+2018-09-07T18:53:06.988; from second@mail; CHAT_second@mail.txt
+2018-09-07T18:55:47.657; from second@mail; i quit chat
+2018-09-07T18:59:09.522; from third@mail; how are you?

@@ -95,7 +95,7 @@ public class User {
         sb.append(", name='").append(name).append('\'');
         sb.append(", age=").append(age);
         sb.append(", password='").append(password).append('\'');
-        sb.append(", lastLogoutTime=").append(lastLogoutTime);
+        sb.append(", lastLogoutTime=").append(lastLogoutTime.toString());
         sb.append('}');
         return sb.toString();
     }
