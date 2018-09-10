@@ -1,5 +1,0 @@
-2018-09-06T19:19:03.702; from second@mail.com; hi chat
-2018-09-06T19:38:49.998; from second@mail.com; message to chat
-2018-09-06T22:48:59.815; from second@mail.com; hi in chat
-2018-09-06T22:56:52.528; from second@mail.com; hi to chat
-2018-09-06T22:58:35.211; from second@mail.com; hi to chat
