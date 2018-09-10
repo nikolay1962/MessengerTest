@@ -1,5 +1,0 @@
-2018-09-05T19:48:21.697;from second@mail.com;Reply to mr.First.
-2018-09-06T22:47:40.286; from second@mail.com; Mr.second is inviting you to join his chat. Please, join, using code below:
-2018-09-06T22:47:40.286; from second@mail.com; CHAT_second@mail.com.txt
-2018-09-06T22:59:00.108; from second@mail.com; Mr.second is inviting you to join his chat. Please, join, using code below:
-2018-09-06T22:59:00.108; from second@mail.com; CHAT_second@mail.com.txt
