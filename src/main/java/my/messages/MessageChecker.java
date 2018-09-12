@@ -3,6 +3,7 @@ package my.messages;
 public class MessageChecker implements Runnable {
 
     private volatile boolean proceed = true;
+    private int timeToSleep = 2000;
 
     private Chat chat;
     private IOUtils ioUtils;
@@ -12,7 +13,7 @@ public class MessageChecker implements Runnable {
         String fileMessages = chat.getMessageFile();
         while (proceed) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(this.timeToSleep);
             } catch (InterruptedException e) {
                 proceed = false;
             }
@@ -31,6 +32,10 @@ public class MessageChecker implements Runnable {
 
     public void setIoUtils(IOUtils ioUtils) {
         this.ioUtils = ioUtils;
+    }
+
+    public void setTimeToSleep(int timeToSleep) {
+        this.timeToSleep = timeToSleep;
     }
 
     public void terminate() {

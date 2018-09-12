@@ -15,8 +15,6 @@ public class User {
     private LocalDateTime lastLogoutTime;
     private volatile long lastTimeOfMessageGet;
     private String incomingMessages;
-//    private MessageChecker messageChecker;
-//    private Thread threadMessageChecker;
     private List<Chat> chats;
 
     public User(String email, String name, int age, String password, long lastTimeOfMessageGet) {
@@ -56,26 +54,6 @@ public class User {
         this.lastLogoutTime = lastLogoutTime;
     }
 
-//    public String getIncomingMessages() {
-//        return incomingMessages;
-//    }
-//
-//    public void setMessageChecker(MessageChecker messageChecker) {
-//        this.messageChecker = messageChecker;
-//    }
-//
-//    public MessageChecker getMessageChecker() {
-//        return messageChecker;
-//    }
-//
-//    public void setThreadMessageChecker(Thread threadMessageChecker) {
-//        this.threadMessageChecker = threadMessageChecker;
-//    }
-//
-//    public Thread getThreadMessageChecker() {
-//        return threadMessageChecker;
-//    }
-//
     public long getLastTimeOfMessageGet() {
         return lastTimeOfMessageGet;
     }

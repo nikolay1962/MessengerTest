@@ -111,10 +111,9 @@ public class UserServices {
         if (user != null) {
             ioUtils.writeMessage("Hello mr." + user.getName());
             ioUtils.writeMessage("You have not been here since " + user.getlastLogoutTime().format(FORMATTER));
-        }
-
-        if (user != null) {
             runUser(user);
+        } else {
+            ioUtils.writeMessage("Wrong username/password for " + email);
         }
 
     }
@@ -271,10 +270,16 @@ public class UserServices {
 
     private void joinChat(User user) {
         String chatFileName = ioUtils.getNotEmptyString("Enter Chat Code, received in Invitation:");
-        String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
-        Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
-        user.getChats().add(newChat);
-        startGettingMessages(user);
+        if (ioUtils.fileExists(chatFileName)) {
+
+            String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
+            Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
+            user.getChats().add(newChat);
+            startGettingMessages(user);
+
+        } else {
+            ioUtils.writeMessage("No chat with code " + chatFileName);
+        }
     }
 
     private void inviteOtherUserToChat(User user) {
@@ -350,6 +355,17 @@ public class UserServices {
             return;
         }
         String chatName = ioUtils.getNotEmptyString("Enter Chat name:");
+        // check if file for new CHAT exists and send creation message to it.
+        if (!ioUtils.fileExists(chatFileName)) {
+            boolean result = ioUtils.sendMessage(user.getEmail(), chatFileName, chatName + " was created.");
+            if (result) {
+                ioUtils.writeMessage("Message was sent to " + chatName);
+            } else {
+                ioUtils.writeMessage("Unable to send message to new CHAT " + chatName);
+                return;
+            }
+
+        }
         Chat newChat = new Chat(chatName, chatFileName, System.currentTimeMillis());
         user.getChats().add(newChat);
         startGettingMessages(user);
@@ -376,5 +392,11 @@ public class UserServices {
             throw new NullStringException("null value was provided to chatFileName.");
         }
         return UserServices.CHAT_PREFIX_SUFFIX[0] + recepient + UserServices.CHAT_PREFIX_SUFFIX[1];
+    }
+
+    public void init() {
+
+        LoginView loginView = new LoginView();
+        loginView.show(null);
     }
 }
